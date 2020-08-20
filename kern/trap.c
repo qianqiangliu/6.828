@@ -84,7 +84,7 @@ trap_init(void)
 	SETGATE(idt[0], 0, GD_KT, th0, 0);
 	SETGATE(idt[1], 0, GD_KT, th1, 0);
 	SETGATE(idt[2], 0, GD_KT, th2, 0);
-	SETGATE(idt[3], 0, GD_KT, th3, 0);
+	SETGATE(idt[3], 0, GD_KT, th3, 3);
 	SETGATE(idt[4], 0, GD_KT, th4, 0);
 	SETGATE(idt[5], 0, GD_KT, th5, 0);
 	SETGATE(idt[6], 0, GD_KT, th6, 0);
@@ -177,6 +177,9 @@ trap_dispatch(struct Trapframe *tf)
 	// LAB 3: Your code here.
 	if (tf->tf_trapno == T_PGFLT) {
 		page_fault_handler(tf);
+		return;
+	} else if (tf->tf_trapno == T_BRKPT) {
+		monitor(tf);
 		return;
 	}
 
