@@ -65,39 +65,47 @@ trap_init(void)
 	extern struct Segdesc gdt[];
 
 	// LAB 3: Your code here.
-	void th0(void);
-	void th1(void);
-	void th2(void);
-	void th3(void);
-	void th4(void);
-	void th5(void);
-	void th6(void);
-	void th7(void);
-	void th8(void);
-	void th10(void);
-	void th11(void);
-	void th12(void);
-	void th13(void);
-	void th14(void);
-	void th16(void);
-	void th48(void);
+	void t_divide_handler(void);
+	void t_debug_handler(void);
+	void t_nmi_handler(void);
+	void t_brkpt_handler(void);
+	void t_oflow_handler(void);
+	void t_bound_handler(void);
+	void t_illop_handler(void);
+	void t_device_handler(void);
+	void t_dblflt_handler(void);
+	void t_tss_handler(void);
+	void t_segnp_handler(void);
+	void t_stack_handler(void);
+	void t_gpflt_handler(void);
+	void t_pgflt_handler(void);
+	void t_fperr_handler(void);
+	void t_align_handler(void);
+	void t_mchk_handler(void);
+	void t_simderr_handler(void);
+	void t_syscall_handler(void);
+	void t_default_handler(void);
 
-	SETGATE(idt[0], 0, GD_KT, th0, 0);
-	SETGATE(idt[1], 0, GD_KT, th1, 0);
-	SETGATE(idt[2], 0, GD_KT, th2, 0);
-	SETGATE(idt[3], 0, GD_KT, th3, 3);
-	SETGATE(idt[4], 0, GD_KT, th4, 0);
-	SETGATE(idt[5], 0, GD_KT, th5, 0);
-	SETGATE(idt[6], 0, GD_KT, th6, 0);
-	SETGATE(idt[7], 0, GD_KT, th7, 0);
-	SETGATE(idt[8], 0, GD_KT, th8, 0);
-	SETGATE(idt[10], 0, GD_KT, th10, 0);
-	SETGATE(idt[11], 0, GD_KT, th11, 0);
-	SETGATE(idt[12], 0, GD_KT, th12, 0);
-	SETGATE(idt[13], 0, GD_KT, th13, 0);
-	SETGATE(idt[14], 0, GD_KT, th14, 0);
-	SETGATE(idt[16], 0, GD_KT, th16, 0);
-	SETGATE(idt[48], 0, GD_KT, th48, 3);
+	SETGATE(idt[T_DIVIDE],  0, GD_KT, t_divide_handler,  0);
+	SETGATE(idt[T_DEBUG],   0, GD_KT, t_debug_handler,   0);
+	SETGATE(idt[T_NMI],     0, GD_KT, t_nmi_handler,     0);
+	SETGATE(idt[T_BRKPT],   1, GD_KT, t_brkpt_handler,   3);
+	SETGATE(idt[T_OFLOW],   1, GD_KT, t_oflow_handler,   0);
+	SETGATE(idt[T_BOUND],   0, GD_KT, t_bound_handler,   0);
+	SETGATE(idt[T_ILLOP],   0, GD_KT, t_illop_handler,   0);
+	SETGATE(idt[T_DEVICE],  0, GD_KT, t_device_handler,  0);
+	SETGATE(idt[T_DBLFLT],  0, GD_KT, t_dblflt_handler,  0);
+	SETGATE(idt[T_TSS],     0, GD_KT, t_tss_handler,     0);
+	SETGATE(idt[T_SEGNP],   0, GD_KT, t_segnp_handler,   0);
+	SETGATE(idt[T_STACK],   0, GD_KT, t_stack_handler,   0);
+	SETGATE(idt[T_GPFLT],   0, GD_KT, t_gpflt_handler,   0);
+	SETGATE(idt[T_PGFLT],   0, GD_KT, t_pgflt_handler,   0);
+	SETGATE(idt[T_FPERR],   0, GD_KT, t_fperr_handler,   0);
+	SETGATE(idt[T_ALIGN],   0, GD_KT, t_align_handler,   0);
+	SETGATE(idt[T_MCHK],    0, GD_KT, t_mchk_handler,    0);
+	SETGATE(idt[T_SIMDERR], 0, GD_KT, t_simderr_handler, 0);
+	SETGATE(idt[T_SYSCALL], 1, GD_KT, t_syscall_handler, 3);
+	SETGATE(idt[T_DEFAULT], 0, GD_KT, t_default_handler, 0);
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -250,6 +258,8 @@ page_fault_handler(struct Trapframe *tf)
 	// Handle kernel-mode page faults.
 
 	// LAB 3: Your code here.
+	if ((tf->tf_cs & 0x03) == 0)
+		panic("kernel page fault\n");
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.
