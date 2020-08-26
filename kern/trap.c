@@ -72,6 +72,47 @@ trap_init(void)
 	extern struct Segdesc gdt[];
 
 	// LAB 3: Your code here.
+	void t_divide_handler(void);
+	void t_debug_handler(void);
+	void t_nmi_handler(void);
+	void t_brkpt_handler(void);
+	void t_oflow_handler(void);
+	void t_bound_handler(void);
+	void t_illop_handler(void);
+	void t_device_handler(void);
+	void t_dblflt_handler(void);
+	void t_tss_handler(void);
+	void t_segnp_handler(void);
+	void t_stack_handler(void);
+	void t_gpflt_handler(void);
+	void t_pgflt_handler(void);
+	void t_fperr_handler(void);
+	void t_align_handler(void);
+	void t_mchk_handler(void);
+	void t_simderr_handler(void);
+	void t_syscall_handler(void);
+	void t_default_handler(void);
+
+	SETGATE(idt[T_DIVIDE],  0, GD_KT, t_divide_handler,  0);
+	SETGATE(idt[T_DEBUG],   0, GD_KT, t_debug_handler,   0);
+	SETGATE(idt[T_NMI],     0, GD_KT, t_nmi_handler,     0);
+	SETGATE(idt[T_BRKPT],   1, GD_KT, t_brkpt_handler,   3);
+	SETGATE(idt[T_OFLOW],   1, GD_KT, t_oflow_handler,   0);
+	SETGATE(idt[T_BOUND],   0, GD_KT, t_bound_handler,   0);
+	SETGATE(idt[T_ILLOP],   0, GD_KT, t_illop_handler,   0);
+	SETGATE(idt[T_DEVICE],  0, GD_KT, t_device_handler,  0);
+	SETGATE(idt[T_DBLFLT],  0, GD_KT, t_dblflt_handler,  0);
+	SETGATE(idt[T_TSS],     0, GD_KT, t_tss_handler,     0);
+	SETGATE(idt[T_SEGNP],   0, GD_KT, t_segnp_handler,   0);
+	SETGATE(idt[T_STACK],   0, GD_KT, t_stack_handler,   0);
+	SETGATE(idt[T_GPFLT],   0, GD_KT, t_gpflt_handler,   0);
+	SETGATE(idt[T_PGFLT],   0, GD_KT, t_pgflt_handler,   0);
+	SETGATE(idt[T_FPERR],   0, GD_KT, t_fperr_handler,   0);
+	SETGATE(idt[T_ALIGN],   0, GD_KT, t_align_handler,   0);
+	SETGATE(idt[T_MCHK],    0, GD_KT, t_mchk_handler,    0);
+	SETGATE(idt[T_SIMDERR], 0, GD_KT, t_simderr_handler, 0);
+	SETGATE(idt[T_SYSCALL], 1, GD_KT, t_syscall_handler, 3);
+	SETGATE(idt[T_DEFAULT], 0, GD_KT, t_default_handler, 0);
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -176,6 +217,18 @@ trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
+	if (tf->tf_trapno == T_PGFLT) {
+		page_fault_handler(tf);
+		return;
+	} else if (tf->tf_trapno == T_BRKPT) {
+		monitor(tf);
+		return;
+	} else if (tf->tf_trapno == T_SYSCALL) {
+		tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax, tf->tf_regs.reg_edx,
+					      tf->tf_regs.reg_ecx, tf->tf_regs.reg_ebx,
+					      tf->tf_regs.reg_edi, tf->tf_regs.reg_esi);
+		return;
+	}
 
 	// Handle spurious interrupts
 	// The hardware sometimes raises these because of noise on the
@@ -271,6 +324,8 @@ page_fault_handler(struct Trapframe *tf)
 	// Handle kernel-mode page faults.
 
 	// LAB 3: Your code here.
+	if ((tf->tf_cs & 0x03) == 0)
+		panic("kernel page fault\n");
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.
